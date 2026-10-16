@@ -1,0 +1,2154 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการยานพาหนะ PEA สาขาโนนแดง</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS for Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --pea-purple: #6F2C91;
+            --pea-purple-dark: #3B0947;
+            --pea-orange: #F7941D;
+            --bg-light: #F4F6F9;
+            --text-color: #2c3e50;
+            --white: #FFFFFF;
+            --sidebar-width: 260px;
+            --navbar-height: 72px;
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
+            --radius: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Sarabun', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar Navigation Style */
+        .sidebar {
+            width: var(--sidebar-width) !important;
+            min-width: var(--sidebar-width) !important;
+            max-width: var(--sidebar-width) !important;
+            flex-shrink: 0 !important;
+            background: linear-gradient(180deg, #4A1763 0%, #6F2C91 100%);
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 22px 20px;
+            background-color: rgba(0, 0, 0, 0.15);
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            white-space: nowrap;
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: #ffd8a8;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 15px 12px;
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sidebar-menu li {
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            font-size: 14.5px;
+            font-weight: 500;
+            color: #f3e8fa;
+            user-select: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-menu li i {
+            margin-right: 12px;
+            width: 22px;
+            text-align: center;
+            color: var(--pea-orange);
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-menu li:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        .sidebar-menu li.active {
+            background: linear-gradient(135deg, var(--pea-orange) 0%, #e08310 100%);
+            color: #fff;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(247, 148, 29, 0.35);
+        }
+
+        .sidebar-menu li.active i {
+            color: #fff;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        /* Top Navbar */
+        .top-navbar {
+            height: var(--navbar-height) !important;
+            min-height: var(--navbar-height) !important;
+            max-height: var(--navbar-height) !important;
+            background: linear-gradient(135deg, #2D0736 0%, #6F2C91 50%, #8B37B3 100%);
+            border-bottom: 3.5px solid var(--pea-orange);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 10;
+            box-sizing: border-box;
+        }
+
+        .page-header-box {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .icon-badge {
+            width: 42px;
+            height: 42px;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(247, 148, 29, 0.6);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+            flex-shrink: 0;
+        }
+
+        .icon-badge i {
+            font-size: 19px;
+            color: var(--pea-orange);
+        }
+
+        .top-navbar h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            white-space: nowrap;
+        }
+
+        .user-badge {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            padding: 8px 18px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 13.5px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            white-space: nowrap;
+        }
+
+        .user-badge i {
+            color: var(--pea-orange);
+            font-size: 17px;
+        }
+
+        .content-body {
+            flex-grow: 1;
+            padding: 25px;
+            overflow-y: auto;
+        }
+
+        /* View Sections Control */
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        /* Stat Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 22px;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(0,0,0,0.04);
+            border-left: 6px solid #ccc;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-card.card-1ton { 
+            border-left-color: #2563eb; 
+            background: linear-gradient(135deg, #ffffff 30%, #eff6ff 100%); 
+        }
+        .stat-card.card-2ton { 
+            border-left-color: #059669; 
+            background: linear-gradient(135deg, #ffffff 30%, #ecfdf5 100%); 
+        }
+        .stat-card.card-3ton { 
+            border-left-color: #d97706; 
+            background: linear-gradient(135deg, #ffffff 30%, #fffbeb 100%); 
+        }
+        .stat-card.card-moto { 
+            border-left-color: #7c3aed; 
+            background: linear-gradient(135deg, #ffffff 30%, #f5f3ff 100%); 
+        }
+
+        .stat-card .info h3 {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .stat-card .info p {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 4px;
+        }
+
+        .stat-card .icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-1ton .icon { background-color: #dbeafe; color: #2563eb; }
+        .card-2ton .icon { background-color: #d1fae5; color: #059669; }
+        .card-3ton .icon { background-color: #fef3c7; color: #d97706; }
+        .card-moto .icon { background-color: #ede9fe; color: #7c3aed; }
+
+        /* Tables & Forms General */
+        .card-box {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow-card);
+            margin-bottom: 24px;
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+
+        .card-box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 12px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .card-box-header h3, .card-box > h3 {
+            color: var(--pea-purple);
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-container label {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-container select, .filter-container input[type="month"] {
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 13.5px;
+            outline: none;
+            background-color: #fff;
+            transition: border 0.2s;
+        }
+
+        .filter-container select:focus, .filter-container input[type="month"]:focus {
+            border-color: var(--pea-purple);
+            box-shadow: 0 0 0 3px rgba(111, 44, 145, 0.15);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table th, table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+            vertical-align: top;
+        }
+
+        table th {
+            background-color: #faf5fc;
+            color: var(--pea-purple);
+            font-weight: 700;
+            font-size: 13.5px;
+        }
+
+        table tbody tr {
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        table tbody tr:hover {
+            background-color: #f7effa;
+        }
+
+        table tbody tr.selected-row {
+            background-color: #eadcf2 !important;
+            font-weight: 600;
+            color: var(--pea-purple-dark);
+        }
+
+        /* Form Controls */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #334155;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 11px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--pea-purple);
+            box-shadow: 0 0 0 3px rgba(111, 44, 145, 0.15);
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        /* Dynamic Repair Items Row */
+        .repair-item-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .repair-item-row input[type="text"] { flex-grow: 2; }
+        .repair-item-row input[type="number"] { flex-grow: 1; }
+
+        /* Buttons */
+        .btn-container {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 11px 22px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--white);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            opacity: 0.95;
+        }
+
+        .btn-save { background-color: #16a34a; }
+        .btn-edit { background-color: var(--pea-orange); }
+        .btn-delete { background-color: #dc2626; }
+        .btn-secondary { background-color: #64748b; }
+
+        .action-btn-group {
+            display: inline-flex;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .btn-tbl-action {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            box-shadow: none;
+        }
+
+        .btn-add-item { background-color: var(--pea-purple); font-size: 13px; padding: 9px 18px; }
+        .btn-remove-item { background-color: #dc2626; font-size: 12px; padding: 10px 12px; }
+
+        /* Inner Table for Repair Items List */
+        .inner-repair-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+        .inner-repair-table td {
+            padding: 6px 0;
+            border-bottom: 1px dashed #e2e8f0;
+            font-size: 13.5px;
+        }
+        .inner-repair-table tr:last-child td {
+            border-bottom: none;
+        }
+        .summary-box-row {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 2px solid var(--pea-purple);
+            font-size: 13px;
+        }
+
+        /* Loader Overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(3px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--pea-purple);
+            border-radius: 50%;
+            width: 44px; height: 44px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <!-- Loader -->
+    <div id="loading-overlay"><div class="spinner"></div></div>
+
+    <!-- Hidden Print Iframe -->
+    <iframe id="printFrame" style="display:none; width:0; height:0; border:none;"></iframe>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fa-solid fa-bolt-lightning fa-2x" style="color: var(--pea-orange);"></i>
+            <h2>PEA โนนแดง</h2>
+            <p>ระบบจัดการยานพาหนะ</p>
+        </div>
+        <ul class="sidebar-menu">
+            <li id="menu-dashboard" class="active" onclick="switchView('dashboard')"><i class="fa-solid fa-chart-pie"></i> หน้าแรก (Dashboard)</li>
+            <li id="menu-vehicles" onclick="switchView('vehicles')"><i class="fa-solid fa-car"></i> เพิ่มข้อมูลยานพาหนะ</li>
+            <li id="menu-usage" onclick="switchView('usage')"><i class="fa-solid fa-gas-pump"></i> การใช้งานรถยนต์</li>
+            <li id="menu-maintenance" onclick="switchView('maintenance')"><i class="fa-solid fa-screwdriver-wrench"></i> ซ่อมบำรุงตามวาระ</li>
+            <li id="menu-reports" onclick="switchView('reports')"><i class="fa-solid fa-file-excel"></i> ออกรายงาน (Export)</li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navbar -->
+        <div class="top-navbar">
+            <div class="page-header-box">
+                <div class="icon-badge">
+                    <i id="page-icon" class="fa-solid fa-car-side"></i>
+                </div>
+                <h1 id="page-title">ระบบจัดการยานพาหนะ</h1>
+            </div>
+            <div class="user-badge">
+                <i class="fa-solid fa-circle-user"></i>
+                <span>ผู้ดูแลระบบ (PEA Non Daeng)</span>
+            </div>
+        </div>
+
+        <div class="content-body">
+
+            <!-- 1. DASHBOARD VIEW -->
+            <div id="view-dashboard" class="view-section active">
+                <div class="card-grid">
+                    <div class="stat-card card-1ton">
+                        <div class="info">
+                            <h3>กระบะ 1 ตัน</h3>
+                            <p id="cnt-1ton">0</p>
+                        </div>
+                        <div class="icon"><i class="fa-solid fa-truck-pickup"></i></div>
+                    </div>
+                    <div class="stat-card card-2ton">
+                        <div class="info">
+                            <h3>กระบะ 2 ตัน</h3>
+                            <p id="cnt-2ton">0</p>
+                        </div>
+                        <div class="icon"><i class="fa-solid fa-truck"></i></div>
+                    </div>
+                    <div class="stat-card card-3ton">
+                        <div class="info">
+                            <h3>กระบะ 3 ตัน</h3>
+                            <p id="cnt-3ton">0</p>
+                        </div>
+                        <div class="icon"><i class="fa-solid fa-truck-moving"></i></div>
+                    </div>
+                    <div class="stat-card card-moto">
+                        <div class="info">
+                            <h3>รถจักรยานยนต์</h3>
+                            <p id="cnt-moto">0</p>
+                        </div>
+                        <div class="icon"><i class="fa-solid fa-motorcycle"></i></div>
+                    </div>
+                </div>
+
+                <div class="card-box">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3><i class="fa-solid fa-list-check"></i> รายการรถยนต์และยานพาหนะทั้งหมดในระบบ</h3>
+                        <button class="btn btn-secondary btn-tbl-action" onclick="loadAllData()"><i class="fa-solid fa-rotate"></i> รีเฟรชข้อมูล</button>
+                    </div>
+                    <table id="table-dashboard-vehicles">
+                        <thead>
+                            <tr>
+                                <th>หมายเลขทะเบียน</th>
+                                <th>ประเภท</th>
+                                <th>ขนาด / รายละเอียด</th>
+                                <th>สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- DETAIL VIEW FOR A SPECIFIC VEHICLE -->
+            <div id="view-vehicle-detail" class="view-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="switchView('dashboard')"><i class="fa-solid fa-arrow-left"></i> กลับหน้า Dashboard</button>
+                    
+                    <div class="filter-container">
+                        <label><i class="fa-solid fa-calendar-days"></i> เลือกช่วงเวลา:</label>
+                        <select id="detail-month-filter" onchange="renderVehicleDetail()">
+                            <option value="">-- แสดงทุกเดือน (ภาพรวมทั้งหมด) --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card-box">
+                    <h3 id="detail-vehicle-title" style="margin-bottom: 18px;"><i class="fa-solid fa-car-rear"></i> ประวัติยานพาหนะ: -</h3>
+                    <div id="vehicle-history-content"></div>
+                </div>
+            </div>
+
+            <!-- 2. VEHICLE MANAGEMENT VIEW -->
+            <div id="view-vehicles" class="view-section">
+                <div class="card-box">
+                    <h3 id="form-vehicle-title"><i class="fa-solid fa-square-plus"></i> เพิ่มข้อมูลยานพาหนะใหม่ (Sheet 1)</h3>
+                    <input type="hidden" id="v-row-index">
+                    <div class="form-grid" style="margin-top: 15px;">
+                        <div class="form-group">
+                            <label>ประเภทรถ</label>
+                            <select id="v-type" onchange="handleVehicleTypeChange()">
+                                <option value="รถยนต์">รถยนต์</option>
+                                <option value="รถจักรยานยนต์">รถจักรยานยนต์</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>หมายเลขทะเบียน</label>
+                            <input type="text" id="v-plate" placeholder="เช่น กข 1234 นครราชสีมา">
+                        </div>
+                    </div>
+
+                    <!-- Conditional Fields -->
+                    <div id="car-options" class="form-grid">
+                        <div class="form-group">
+                            <label>ขนาดรถยนต์</label>
+                            <select id="v-car-size">
+                                <option value="1 ตัน">1 ตัน</option>
+                                <option value="2 ตัน">2 ตัน</option>
+                                <option value="3 ตัน">3 ตัน</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>คุณลักษณะเพิ่มเติม</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" id="v-roof"> มีหลังคา</label>
+                                <label><input type="checkbox" id="v-electric"> รถแก้ไฟฯ</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="moto-options" class="form-grid" style="display: none;">
+                        <div class="form-group">
+                            <label>ขนาดเครื่องยนต์</label>
+                            <select id="v-moto-size">
+                                <option value="110 cc">110 cc</option>
+                                <option value="125 cc">125 cc</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="btn-container">
+                        <button id="btn-vehicle-save" class="btn btn-save" onclick="saveVehicle()"><i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล</button>
+                        <button class="btn btn-secondary" onclick="clearVehicleForm()"><i class="fa-solid fa-xmark"></i> ยกเลิก / เพิ่มใหม่</button>
+                    </div>
+                </div>
+
+                <div class="card-box">
+                    <h3><i class="fa-solid fa-warehouse"></i> รายชื่อยานพาหนะทั้งหมด</h3>
+                    <table id="table-manage-vehicles">
+                        <thead>
+                            <tr>
+                                <th>ทะเบียน</th>
+                                <th>ประเภท</th>
+                                <th>ขนาด/รายละเอียด</th>
+                                <th style="text-align: center; width: 160px;">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. USAGE & FUEL VIEW -->
+            <div id="view-usage" class="view-section">
+                <div class="card-box">
+                    <h3 id="form-usage-title"><i class="fa-solid fa-gas-pump"></i> บันทึกการใช้งานรถยนต์และเติมน้ำมัน (Sheet 2)</h3>
+                    <input type="hidden" id="u-row-index">
+                    <div class="form-grid" style="margin-top: 15px;">
+                        <div class="form-group">
+                            <label>วันที่ใช้งาน / เติมน้ำมัน</label>
+                            <input type="date" id="u-date">
+                        </div>
+                        <div class="form-group">
+                            <label>หมายเลขทะเบียนรถ</label>
+                            <select id="u-plate"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>เลขไมล์ล่าสุด (Km)</label>
+                            <input type="number" id="u-mileage" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label>ประเภทเชื้อเพลิง</label>
+                            <select id="u-fuel-type">
+                                <option value="ดีเซล">ดีเซล</option>
+                                <option value="แก๊สโซฮอล์ 91">แก๊สโซฮอล์ 91</option>
+                                <option value="แก๊สโซฮอล์ 95">แก๊สโซฮอล์ 95</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>ราคาต่อลิตร (บาท)</label>
+                            <input type="number" step="0.01" id="u-price-per-litre" oninput="calculateFuelTotal()" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>จำนวนลิตรที่เติม</label>
+                            <input type="number" step="0.01" id="u-litres" oninput="calculateFuelTotal()" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>จำนวนเงินรวม (บาท)</label>
+                            <input type="text" id="u-total-amount" readonly style="background-color: #f1f5f9; font-weight: bold;" value="0.00">
+                        </div>
+                    </div>
+                    <div class="btn-container">
+                        <button id="btn-usage-save" class="btn btn-save" onclick="saveUsage()"><i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล</button>
+                        <button class="btn btn-secondary" onclick="clearUsageForm()"><i class="fa-solid fa-xmark"></i> ยกเลิก / เพิ่มใหม่</button>
+                    </div>
+                </div>
+
+                <div class="card-box">
+                    <div class="card-box-header">
+                        <h3><i class="fa-solid fa-clock-rotate-left"></i> ประวัติการใช้งานและการเติมน้ำมัน</h3>
+                        <div class="filter-container">
+                            <label><i class="fa-solid fa-car"></i> ทะเบียน:</label>
+                            <select id="u-plate-filter" onchange="loadUsageTable()">
+                                <option value="">-- เลือกทะเบียนรถยนต์ --</option>
+                            </select>
+
+                            <label><i class="fa-solid fa-calendar-days"></i> เดือน:</label>
+                            <input type="month" id="u-month-filter" onchange="loadUsageTable()">
+                            
+                            <button class="btn btn-secondary btn-tbl-action" onclick="resetUsageFilters()">ล้างการเลือก</button>
+                        </div>
+                    </div>
+                    <table id="table-usage-list">
+                        <thead>
+                            <tr>
+                                <th>วันที่</th>
+                                <th>ทะเบียนรถ</th>
+                                <th>เลขไมล์</th>
+                                <th>เชื้อเพลิง</th>
+                                <th>ลิตร</th>
+                                <th>รวมเงิน (บาท)</th>
+                                <th style="text-align: center; width: 160px;">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 4. MAINTENANCE VIEW -->
+            <div id="view-maintenance" class="view-section">
+                <div class="card-box">
+                    <h3 id="form-maint-title"><i class="fa-solid fa-screwdriver-wrench"></i> บันทึกการซ่อมบำรุงตามวาระ (Sheet 3)</h3>
+                    <input type="hidden" id="m-row-index">
+                    <div class="form-grid" style="margin-top: 15px;">
+                        <div class="form-group">
+                            <label>วันที่ซ่อมบำรุง</label>
+                            <input type="date" id="m-date">
+                        </div>
+                        <div class="form-group">
+                            <label>ประเภทการซ่อมบำรุง</label>
+                            <select id="m-type">
+                                <option value="ซ่อมรถยนต์">ซ่อมรถยนต์</option>
+                                <option value="บำรุงรักษาตามวาระ">บำรุงรักษาตามวาระ</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>หมายเลขทะเบียนรถ</label>
+                            <select id="m-plate"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>เลขไมล์ขณะซ่อม (Km)</label>
+                            <input type="number" id="m-mileage" placeholder="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 15px; margin-bottom: 15px;">
+                        <label style="margin-bottom: 8px;">รายการซ่อมบำรุง (สามารถเพิ่มได้หลายรายการ)</label>
+                        <div id="repair-items-container"></div>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+                            <button type="button" class="btn btn-add-item" onclick="addRepairItemRow()"><i class="fa-solid fa-plus"></i> เพิ่มรายการซ่อม</button>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>ราคารวมสินค้า/อะไหล่ทั้งหมด (บาท)</label>
+                            <input type="number" step="0.01" id="m-price" readonly style="background-color: #f1f5f9;" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>อัตราภาษี (%) เช่น 7 หรือ 0</label>
+                            <input type="number" step="0.01" id="m-vat-rate" oninput="calculateMaintenanceTotal()" placeholder="0" value="7">
+                        </div>
+                        <div class="form-group">
+                            <label>จำนวนเงินรวมทั้งสิ้น (บาท)</label>
+                            <input type="text" id="m-total-amount" readonly style="background-color: #f1f5f9; font-weight: bold;" value="0.00">
+                        </div>
+                    </div>
+                    <input type="hidden" id="m-vat" value="0.00">
+
+                    <div class="btn-container">
+                        <button id="btn-maint-save" class="btn btn-save" onclick="saveMaintenance()"><i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล</button>
+                        <button class="btn btn-secondary" onclick="clearMaintenanceForm()"><i class="fa-solid fa-rotate-left"></i> ล้างฟอร์ม</button>
+                    </div>
+                </div>
+
+                <div class="card-box">
+                    <div class="card-box-header">
+                        <h3><i class="fa-solid fa-clock-rotate-left"></i> ประวัติการซ่อมบำรุง</h3>
+                        <div class="filter-container">
+                            <label><i class="fa-solid fa-car"></i> ทะเบียน:</label>
+                            <select id="m-plate-filter" onchange="loadMaintenanceTable()">
+                                <option value="">-- เลือกทะเบียนรถยนต์ --</option>
+                            </select>
+
+                            <label><i class="fa-solid fa-calendar-days"></i> เดือน:</label>
+                            <input type="month" id="m-month-filter" onchange="loadMaintenanceTable()">
+                            
+                            <button class="btn btn-secondary btn-tbl-action" onclick="resetMaintenanceFilters()">ล้างการเลือก</button>
+                        </div>
+                    </div>
+                    <table id="table-maintenance-list">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">วันที่</th>
+                                <th style="width: 10%;">เลขไมล์ (Km)</th>
+                                <th style="width: 11%;">ประเภท</th>
+                                <th style="width: 14%;">ทะเบียนรถ</th>
+                                <th>รายการซ่อมบำรุง</th>
+                                <th style="width: 14%; text-align: right;">จำนวนเงิน (บาท)</th>
+                                <th style="text-align: center; width: 130px;">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 5. REPORTS VIEW (ปรับปรุงแยกประเภทรายงาน) -->
+            <div id="view-reports" class="view-section">
+                <div class="card-box">
+                    <h3><i class="fa-solid fa-file-invoice"></i> ออกรายงาน (Export Reports)</h3>
+                    <div class="form-grid" style="margin-top: 15px;">
+                        <div class="form-group">
+                            <label>ประเภทรายงาน</label>
+                            <select id="rep-type">
+                                <option value="usage">รายงานการใช้งานรถยนต์และเติมน้ำมัน</option>
+                                <option value="repair">รายงานการซ่อมรถยนต์</option>
+                                <option value="routine">รายงานการบำรุงรักษาตามวาระ</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>หมายเลขทะเบียนรถ (เลือกเฉพาะคันได้)</label>
+                            <select id="rep-plate">
+                                <option value="">-- แสดงทุกทะเบียน (ภาพรวม) --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>วันที่เริ่มต้น</label>
+                            <input type="date" id="rep-start">
+                        </div>
+                        <div class="form-group">
+                            <label>วันที่สิ้นสุด</label>
+                            <input type="date" id="rep-end">
+                        </div>
+                    </div>
+                    <div class="btn-container">
+                        <button class="btn" style="background-color: #15803d;" onclick="exportExcel()"><i class="fa-solid fa-file-excel"></i> ส่งออก Excel (.xlsx)</button>
+                        <button class="btn" style="background-color: #b91c1c;" onclick="exportPDF()"><i class="fa-solid fa-file-pdf"></i> พิมพ์ / บันทึก PDF ภาษาไทยสวยงาม</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbzg6wu0cj-GINaZcybiu_AGM3HLrGMW-mogA6wvfZxuZ1TgVYq2dqiwR6F6LlYV_e4/exec";
+
+        let vehiclesData = [];
+        let usageData = [];
+        let maintenanceData = [];
+        let currentSelectedVehiclePlate = "";
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadAllData();
+            addRepairItemRow();
+            setTodayDate('u-date');
+            setTodayDate('m-date');
+            initReportDateRange();
+        });
+
+        function initReportDateRange() {
+            let today = new Date();
+            let yyyy = today.getFullYear();
+            let mm = String(today.getMonth() + 1).padStart(2, '0');
+            let dd = String(today.getDate()).padStart(2, '0');
+
+            let firstDayOfMonth = `${yyyy}-${mm}-01`;
+            let currentDateStr = `${yyyy}-${mm}-${dd}`;
+
+            let startEl = document.getElementById('rep-start');
+            let endEl = document.getElementById('rep-end');
+
+            if (startEl && !startEl.value) startEl.value = firstDayOfMonth;
+            if (endEl && !endEl.value) endEl.value = currentDateStr;
+        }
+
+        function setTodayDate(elementId) {
+            let today = new Date().toISOString().split('T')[0];
+            let el = document.getElementById(elementId);
+            if (el && !el.value) el.value = today;
+        }
+
+        function formatDateToISO(dateStr) {
+            if (!dateStr) return "";
+            if (dateStr.includes("T")) {
+                let d = new Date(dateStr);
+                let year = d.getFullYear();
+                let month = String(d.getMonth() + 1).padStart(2, '0');
+                let day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            if (dateStr.includes("/")) {
+                let parts = dateStr.split("/");
+                if (parts.length === 3) {
+                    if (parts[0].length === 4) return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                    return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                }
+            }
+            return dateStr;
+        }
+
+        function formatDateToThai(dateStr) {
+            let iso = formatDateToISO(dateStr);
+            if (!iso) return "-";
+            let parts = iso.split("-");
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateStr;
+        }
+
+        function showLoader(show) {
+            let el = document.getElementById("loading-overlay");
+            if (el) el.style.display = show ? "flex" : "none";
+        }
+
+        function switchView(viewId) {
+            document.querySelectorAll(".view-section").forEach(el => el.classList.remove("active"));
+            document.querySelectorAll(".sidebar-menu li").forEach(el => el.classList.remove("active"));
+            
+            let pageTitle = document.getElementById("page-title");
+            let pageIcon = document.getElementById("page-icon");
+
+            let targetView = document.getElementById(`view-${viewId}`);
+            let targetMenu = document.getElementById(`menu-${viewId}`);
+
+            if (targetView) targetView.classList.add("active");
+            if (targetMenu) targetMenu.classList.add("active");
+
+            if (viewId === 'dashboard') {
+                if (pageTitle) pageTitle.innerText = "ระบบจัดการยานพาหนะ";
+                if (pageIcon) pageIcon.className = "fa-solid fa-car-side";
+            } else if (viewId === 'vehicles') {
+                if (pageTitle) pageTitle.innerText = "เพิ่มข้อมูลยานพาหนะ";
+                if (pageIcon) pageIcon.className = "fa-solid fa-car";
+            } else if (viewId === 'usage') {
+                if (pageTitle) pageTitle.innerText = "บันทึกการใช้งานรถยนต์และเติมน้ำมัน";
+                if (pageIcon) pageIcon.className = "fa-solid fa-gas-pump";
+                populatePlateDropdowns();
+                setTodayDate('u-date');
+            } else if (viewId === 'maintenance') {
+                if (pageTitle) pageTitle.innerText = "ซ่อมบำรุงตามวาระ";
+                if (pageIcon) pageIcon.className = "fa-solid fa-screwdriver-wrench";
+                populatePlateDropdowns();
+                setTodayDate('m-date');
+            } else if (viewId === 'reports') {
+                if (pageTitle) pageTitle.innerText = "ระบบออกรายงาน";
+                if (pageIcon) pageIcon.className = "fa-solid fa-file-invoice";
+                populatePlateDropdowns();
+                initReportDateRange();
+            }
+        }
+
+        async function fetchSheetData(sheetName) {
+            try {
+                let res = await fetch(`${API_URL}?action=getData&sheet=${sheetName}&t=${new Date().getTime()}`);
+                let json = await res.json();
+                return Array.isArray(json) ? json : [];
+            } catch (err) {
+                console.error(`Error fetching sheet ${sheetName}:`, err);
+                return [];
+            }
+        }
+
+        async function loadAllData() {
+            showLoader(true);
+            try {
+                const [rawV, rawU, rawM] = await Promise.all([
+                    fetchSheetData("Vehicle"),
+                    fetchSheetData("Usage"),
+                    fetchSheetData("Maintenance")
+                ]);
+
+                vehiclesData = rawV;
+                usageData = rawU;
+                maintenanceData = rawM;
+                
+                updateDashboard();
+            } catch (err) {
+                console.error("Error loading data:", err);
+            }
+            showLoader(false);
+        }
+
+        function updateDashboard() {
+            let c1 = 0, c2 = 0, c3 = 0, cm = 0;
+            let tbody = document.querySelector("#table-dashboard-vehicles tbody");
+            let mTableBody = document.querySelector("#table-manage-vehicles tbody");
+            if (tbody) tbody.innerHTML = "";
+            if (mTableBody) mTableBody.innerHTML = "";
+
+            if (vehiclesData.length === 0) {
+                if (tbody) tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 20px;">- ไม่พบข้อมูลยานพาหนะในระบบ -</td></tr>`;
+                if (mTableBody) mTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 20px;">- ไม่พบข้อมูลยานพาหนะในระบบ -</td></tr>`;
+            } else {
+                vehiclesData.forEach(item => {
+                    let details = "";
+                    if (item.Type === "รถยนต์") {
+                        details = `ขนาด ${item.Size || '-'}`;
+                        if (item.HasRoof === "TRUE" || item.HasRoof === true) details += ", มีหลังคา";
+                        if (item.IsElectric === "TRUE" || item.IsElectric === true) details += ", รถแก้ไฟฯ";
+
+                        if (item.Size === "1 ตัน") c1++;
+                        else if (item.Size === "2 ตัน") c2++;
+                        else if (item.Size === "3 ตัน") c3++;
+                    } else {
+                        cm++;
+                        details = `เครื่องยนต์ ${item.Size || '-'}`;
+                    }
+
+                    if (tbody) {
+                        let tr = document.createElement("tr");
+                        tr.innerHTML = `<td><b>${item.Plate}</b></td><td>${item.Type}</td><td>${details}</td><td><span style="color:#16a34a; font-weight:bold;"><i class="fa-solid fa-circle-check"></i> พร้อมใช้งาน</span></td>`;
+                        tr.onclick = () => showVehicleDetail(item.Plate);
+                        tbody.appendChild(tr);
+                    }
+
+                    if (mTableBody) {
+                        let mTr = document.createElement("tr");
+                        mTr.id = `row-vehicle-${item.rowIndex}`;
+                        mTr.innerHTML = `
+                            <td><b>${item.Plate}</b></td>
+                            <td>${item.Type}</td>
+                            <td>${details}</td>
+                            <td style="text-align: center;">
+                                <div class="action-btn-group">
+                                    <button class="btn btn-edit btn-tbl-action" onclick="selectVehicleForEdit('${item.Plate}', ${item.rowIndex}, event)"><i class="fa-solid fa-pen-to-square"></i> แก้ไข</button>
+                                    <button class="btn btn-delete btn-tbl-action" onclick="deleteVehicleDirect('${item.Plate}', ${item.rowIndex}, event)"><i class="fa-solid fa-trash"></i> ลบ</button>
+                                </div>
+                            </td>
+                        `;
+                        mTr.onclick = () => selectVehicleForEdit(item.Plate, item.rowIndex);
+                        mTableBody.appendChild(mTr);
+                    }
+                });
+            }
+
+            document.getElementById("cnt-1ton").innerText = c1;
+            document.getElementById("cnt-2ton").innerText = c2;
+            document.getElementById("cnt-3ton").innerText = c3;
+            document.getElementById("cnt-moto").innerText = cm;
+
+            populatePlateDropdowns();
+            loadUsageTable();
+            loadMaintenanceTable();
+        }
+
+        function selectVehicleForEdit(plate, rowIndex, event) {
+            if (event) event.stopPropagation();
+
+            document.querySelectorAll("#table-manage-vehicles tbody tr").forEach(r => r.classList.remove("selected-row"));
+            let targetRow = document.getElementById(`row-vehicle-${rowIndex}`);
+            if (targetRow) targetRow.classList.add("selected-row");
+
+            let item = vehiclesData.find(v => v.Plate === plate);
+            if (item) populateVehicleForm(item);
+        }
+
+        function showVehicleDetail(plate) {
+            currentSelectedVehiclePlate = plate;
+            document.querySelectorAll(".view-section").forEach(el => el.classList.remove("active"));
+            document.getElementById("view-vehicle-detail").classList.add("active");
+            document.getElementById("detail-vehicle-title").innerHTML = `<i class="fa-solid fa-car-rear"></i> ประวัติยานพาหนะหมายเลขทะเบียน: ${plate}`;
+
+            let availableMonths = new Set();
+            usageData.filter(u => u.Plate === plate).forEach(u => {
+                let iso = formatDateToISO(u.Date);
+                if (iso && iso.length >= 7) availableMonths.add(iso.substring(0, 7));
+            });
+            maintenanceData.filter(m => m.Plate === plate).forEach(m => {
+                let iso = formatDateToISO(m.Date);
+                if (iso && iso.length >= 7) availableMonths.add(iso.substring(0, 7));
+            });
+
+            let sortedMonths = Array.from(availableMonths).sort().reverse();
+
+            let monthSelect = document.getElementById("detail-month-filter");
+            let monthOpts = `<option value="">-- แสดงทุกเดือน (ภาพรวมทั้งหมด) --</option>`;
+            sortedMonths.forEach(mStr => {
+                let [yyyy, mm] = mStr.split("-");
+                let thaiYear = parseInt(yyyy) + 543;
+                let monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+                let monthName = monthNames[parseInt(mm) - 1];
+                monthOpts += `<option value="${mStr}">${monthName} ${thaiYear}</option>`;
+            });
+            monthSelect.innerHTML = monthOpts;
+            monthSelect.value = "";
+
+            renderVehicleDetail();
+        }
+
+        function renderVehicleDetail() {
+            let plate = currentSelectedVehiclePlate;
+            let selectedMonth = document.getElementById("detail-month-filter").value;
+
+            let filteredUsage = usageData.filter(u => {
+                let matchPlate = (u.Plate === plate);
+                let matchMonth = true;
+                if (selectedMonth) {
+                    let iso = formatDateToISO(u.Date);
+                    matchMonth = iso.startsWith(selectedMonth);
+                }
+                return matchPlate && matchMonth;
+            });
+
+            let filteredMaint = maintenanceData.filter(m => {
+                let matchPlate = (m.Plate === plate);
+                let matchMonth = true;
+                if (selectedMonth) {
+                    let iso = formatDateToISO(m.Date);
+                    matchMonth = iso.startsWith(selectedMonth);
+                }
+                return matchPlate && matchMonth;
+            });
+
+            let usageTableRows = "";
+            if (filteredUsage.length > 0) {
+                filteredUsage.forEach(u => {
+                    let litresNum = parseFloat(u.Litres) || 0;
+                    let amountNum = parseFloat(u.TotalAmount) || 0;
+                    usageTableRows += `
+                        <tr>
+                            <td>${formatDateToThai(u.Date)}</td>
+                            <td style="text-align: right;">${u.Mileage || '-'}</td>
+                            <td>${u.FuelType || '-'}</td>
+                            <td style="text-align: right;">${litresNum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td style="text-align: right;"><b>${amountNum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></td>
+                        </tr>
+                    `;
+                });
+            } else {
+                usageTableRows = `<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 16px;">- ไม่พบประวัติการใช้งานในช่วงเวลานี้ -</td></tr>`;
+            }
+
+            let maintTableRows = "";
+            if (filteredMaint.length > 0) {
+                filteredMaint.forEach(m => {
+                    let repairRows = "";
+                    if (m.Details) {
+                        let items = m.Details.split(",");
+                        items.forEach(it => {
+                            let parsed = parseRepairItem(it);
+                            let pStr = parsed.price !== null ? parsed.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "-";
+                            repairRows += `<tr><td>• ${parsed.desc}</td><td style="text-align: right; width: 100px;">${pStr}</td></tr>`;
+                        });
+                    }
+
+                    let subPrice = parseFloat(m.Price) || 0;
+                    let vatPrice = parseFloat(m.VAT) || 0;
+                    let totalAmt = parseFloat(m.TotalAmount) || 0;
+                    let mileageVal = m.Mileage ? parseInt(m.Mileage).toLocaleString() : "-";
+
+                    let summaryBox = `
+                        <table class="inner-repair-table"><tbody>${repairRows}</tbody></table>
+                        <div class="summary-box-row">
+                            <div style="display: flex; justify-content: space-between; color: #64748b; padding: 2px 0;">
+                                <span>ราคารวมสินค้า/อะไหล่:</span>
+                                <span><b>${subPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b> บาท</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; color: #64748b; padding: 2px 0;">
+                                <span>ภาษีมูลค่าเพิ่ม VAT:</span>
+                                <span><b>${vatPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b> บาท</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; color: var(--pea-purple); font-weight: bold; margin-top: 4px; padding-top: 6px; border-top: 1px solid #e2e8f0;">
+                                <span>รวมเงินทั้งสิ้น:</span>
+                                <span>${totalAmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} บาท</span>
+                            </div>
+                        </div>
+                    `;
+
+                    maintTableRows += `
+                        <tr>
+                            <td>${formatDateToThai(m.Date)}</td>
+                            <td style="text-align: right;"><b>${mileageVal}</b></td>
+                            <td>${m.Type}</td>
+                            <td>${summaryBox}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                maintTableRows = `<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 16px;">- ไม่พบประวัติการซ่อมบำรุงในช่วงเวลานี้ -</td></tr>`;
+            }
+
+            let historyHtml = `
+                <h4 style="color: var(--pea-purple); margin-bottom: 12px; font-size: 16px;"><i class="fa-solid fa-gas-pump"></i> ประวัติการใช้งาน / เติมน้ำมัน</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>วันที่</th>
+                            <th style="text-align: right;">เลขไมล์ (Km)</th>
+                            <th>ประเภทเชื้อเพลิง</th>
+                            <th style="text-align: right;">จำนวนลิตร</th>
+                            <th style="text-align: right;">รวมเงิน (บาท)</th>
+                        </tr>
+                    </thead>
+                    <tbody>${usageTableRows}</tbody>
+                </table>
+
+                <h4 style="color: var(--pea-purple); margin-top: 32px; margin-bottom: 12px; font-size: 16px;"><i class="fa-solid fa-screwdriver-wrench"></i> ประวัติการซ่อมบำรุง</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">วันที่</th>
+                            <th style="width: 15%; text-align: right;">เลขไมล์ (Km)</th>
+                            <th style="width: 20%;">ประเภทซ่อมบำรุง</th>
+                            <th>รายละเอียดรายการซ่อมบำรุงและค่าใช้จ่าย</th>
+                        </tr>
+                    </thead>
+                    <tbody>${maintTableRows}</tbody>
+                </table>
+            `;
+
+            document.getElementById("vehicle-history-content").innerHTML = historyHtml;
+        }
+
+        function handleVehicleTypeChange() {
+            let type = document.getElementById("v-type").value;
+            if (type === "รถยนต์") {
+                document.getElementById("car-options").style.display = "grid";
+                document.getElementById("moto-options").style.display = "none";
+            } else {
+                document.getElementById("car-options").style.display = "none";
+                document.getElementById("moto-options").style.display = "grid";
+            }
+        }
+
+        function populateVehicleForm(item) {
+            document.getElementById("v-row-index").value = item.rowIndex;
+            document.getElementById("v-type").value = item.Type;
+            handleVehicleTypeChange();
+            document.getElementById("v-plate").value = item.Plate;
+            if (item.Type === "รถยนต์") {
+                document.getElementById("v-car-size").value = item.Size;
+                document.getElementById("v-roof").checked = (item.HasRoof === "TRUE" || item.HasRoof === true);
+                document.getElementById("v-electric").checked = (item.IsElectric === "TRUE" || item.IsElectric === true);
+            } else {
+                document.getElementById("v-moto-size").value = item.Size;
+            }
+
+            document.getElementById("form-vehicle-title").innerHTML = `<i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูลยานพาหนะ (ทะเบียน: ${item.Plate})`;
+            let saveBtn = document.getElementById("btn-vehicle-save");
+            saveBtn.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> อัปเดตแก้ไข`;
+            saveBtn.className = "btn btn-edit";
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function clearVehicleForm() {
+            document.getElementById("v-row-index").value = "";
+            document.getElementById("v-plate").value = "";
+            document.getElementById("v-roof").checked = false;
+            document.getElementById("v-electric").checked = false;
+            document.querySelectorAll("#table-manage-vehicles tbody tr").forEach(r => r.classList.remove("selected-row"));
+
+            document.getElementById("form-vehicle-title").innerHTML = `<i class="fa-solid fa-square-plus"></i> เพิ่มข้อมูลยานพาหนะใหม่ (Sheet 1)`;
+            let saveBtn = document.getElementById("btn-vehicle-save");
+            saveBtn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล`;
+            saveBtn.className = "btn btn-save";
+        }
+
+        async function saveVehicle() {
+            let rowIndex = document.getElementById("v-row-index").value;
+            let action = rowIndex ? "update" : "add";
+            let type = document.getElementById("v-type").value;
+            let inputPlate = document.getElementById("v-plate").value.trim();
+
+            if (!inputPlate) { 
+                alert("กรุณากรอกหมายเลขทะเบียนรถ"); 
+                return; 
+            }
+
+            if (action === "add") {
+                let isDuplicate = vehiclesData.some(v => v.Plate && v.Plate.trim().toLowerCase() === inputPlate.toLowerCase());
+                if (isDuplicate) {
+                    alert(`⚠️ ไม่สามารถบันทึกได้!\n\nหมายเลขทะเบียน "${inputPlate}" มีอยู่ในระบบแล้ว กรุณาตรวจสอบหรือเลือกแก้ไขรายการเดิม`);
+                    return;
+                }
+            }
+            
+            let payload = {
+                Plate: inputPlate,
+                Type: type,
+                Size: type === "รถยนต์" ? document.getElementById("v-car-size").value : document.getElementById("v-moto-size").value,
+                HasRoof: type === "รถยนต์" ? document.getElementById("v-roof").checked : "",
+                IsElectric: type === "รถยนต์" ? document.getElementById("v-electric").checked : ""
+            };
+
+            showLoader(true);
+            try {
+                await fetch(API_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sheet: "Vehicle", action: action, rowIndex: rowIndex, payload: payload })
+                });
+                clearVehicleForm();
+                setTimeout(() => { loadAllData(); }, 1000);
+            } catch(e) {
+                console.error(e);
+                showLoader(false);
+            }
+        }
+
+        async function deleteVehicleDirect(plate, rowIndex, event) {
+            if (event) event.stopPropagation();
+            if (confirm(`คุณต้องการลบยานพาหนะทะเบียน "${plate}" ออกจากระบบใช่หรือไม่?`)) {
+                showLoader(true);
+                try {
+                    await fetch(API_URL, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ sheet: "Vehicle", action: "delete", rowIndex: rowIndex, payload: {} })
+                    });
+                    clearVehicleForm();
+                    setTimeout(() => { loadAllData(); }, 1000);
+                } catch(e) {
+                    console.error(e);
+                    showLoader(false);
+                }
+            }
+        }
+
+        function populatePlateDropdowns() {
+            let currentUPlate = document.getElementById("u-plate") ? document.getElementById("u-plate").value : "";
+            let currentMPlate = document.getElementById("m-plate") ? document.getElementById("m-plate").value : "";
+
+            let formOpts = vehiclesData.map(v => `<option value="${v.Plate}">${v.Plate} (${v.Type})</option>`).join("");
+            if (document.getElementById("u-plate")) document.getElementById("u-plate").innerHTML = formOpts;
+            if (document.getElementById("m-plate")) document.getElementById("m-plate").innerHTML = formOpts;
+
+            if (currentUPlate && document.getElementById("u-plate")) document.getElementById("u-plate").value = currentUPlate;
+            if (currentMPlate && document.getElementById("m-plate")) document.getElementById("m-plate").value = currentMPlate;
+
+            let filterOpts = `<option value="">-- เลือกทะเบียนรถยนต์ --</option>` + vehiclesData.map(v => `<option value="${v.Plate}">${v.Plate}</option>`).join("");
+            if (document.getElementById("u-plate-filter")) document.getElementById("u-plate-filter").innerHTML = filterOpts;
+
+            let mFilterOpts = `<option value="">-- เลือกทะเบียนรถยนต์ --</option>` + vehiclesData.map(v => `<option value="${v.Plate}">${v.Plate}</option>`).join("");
+            if (document.getElementById("m-plate-filter")) document.getElementById("m-plate-filter").innerHTML = mFilterOpts;
+
+            let repOpts = `<option value="">-- แสดงทุกทะเบียน (ภาพรวม) --</option>` + vehiclesData.map(v => `<option value="${v.Plate}">${v.Plate} (${v.Type})</option>`).join("");
+            if (document.getElementById("rep-plate")) document.getElementById("rep-plate").innerHTML = repOpts;
+        }
+
+        function calculateFuelTotal() {
+            let price = parseFloat(document.getElementById("u-price-per-litre").value) || 0;
+            let litres = parseFloat(document.getElementById("u-litres").value) || 0;
+            document.getElementById("u-total-amount").value = (price * litres).toFixed(2);
+        }
+
+        function loadUsageTable() {
+            let tbody = document.querySelector("#table-usage-list tbody");
+            if (!tbody) return;
+            tbody.innerHTML = "";
+            let selectedPlate = document.getElementById("u-plate-filter").value;
+            let selectedMonth = document.getElementById("u-month-filter").value;
+
+            if (!selectedPlate) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 20px;">กรุณาเลือกทะเบียนรถยนต์เพื่อดูประวัติการใช้งานและการเติมน้ำมัน</td></tr>`;
+                return;
+            }
+
+            let filteredData = usageData.filter(item => {
+                let matchPlate = (item.Plate && item.Plate.trim() === selectedPlate.trim());
+                let matchMonth = true;
+
+                if (selectedMonth) {
+                    let isoDate = formatDateToISO(item.Date);
+                    matchMonth = isoDate.startsWith(selectedMonth);
+                }
+
+                return matchPlate && matchMonth;
+            });
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 20px;">ไม่พบประวัติการใช้งานและการเติมน้ำมันของทะเบียน "${selectedPlate}"</td></tr>`;
+                return;
+            }
+
+            filteredData.forEach(item => {
+                let tr = document.createElement("tr");
+                tr.id = `row-usage-${item.rowIndex}`;
+                tr.innerHTML = `
+                    <td>${formatDateToThai(item.Date)}</td>
+                    <td><b>${item.Plate}</b></td>
+                    <td>${item.Mileage}</td>
+                    <td>${item.FuelType}</td>
+                    <td>${item.Litres}</td>
+                    <td>${item.TotalAmount}</td>
+                    <td style="text-align: center;">
+                        <div class="action-btn-group">
+                            <button class="btn btn-edit btn-tbl-action" onclick="selectUsageForEdit(${item.rowIndex}, event)"><i class="fa-solid fa-pen-to-square"></i> แก้ไข</button>
+                            <button class="btn btn-delete btn-tbl-action" onclick="deleteUsageDirect(${item.rowIndex}, event)"><i class="fa-solid fa-trash"></i> ลบ</button>
+                        </div>
+                    </td>
+                `;
+                tr.onclick = () => selectUsageForEdit(item.rowIndex);
+                tbody.appendChild(tr);
+            });
+        }
+
+        function resetUsageFilters() {
+            document.getElementById("u-plate-filter").value = "";
+            document.getElementById("u-month-filter").value = "";
+            loadUsageTable();
+        }
+
+        function selectUsageForEdit(rowIndex, event) {
+            if (event) event.stopPropagation();
+
+            document.querySelectorAll("#table-usage-list tbody tr").forEach(r => r.classList.remove("selected-row"));
+            let targetRow = document.getElementById(`row-usage-${rowIndex}`);
+            if (targetRow) targetRow.classList.add("selected-row");
+
+            let item = usageData.find(u => u.rowIndex === rowIndex);
+            if (item) populateUsageForm(item);
+        }
+
+        function populateUsageForm(item) {
+            document.getElementById("u-row-index").value = item.rowIndex;
+            document.getElementById("u-date").value = formatDateToISO(item.Date);
+            document.getElementById("u-plate").value = item.Plate;
+            document.getElementById("u-mileage").value = item.Mileage;
+            document.getElementById("u-fuel-type").value = item.FuelType;
+            document.getElementById("u-price-per-litre").value = item.PricePerLitre;
+            document.getElementById("u-litres").value = item.Litres;
+            document.getElementById("u-total-amount").value = item.TotalAmount;
+
+            document.getElementById("form-usage-title").innerHTML = `<i class="fa-solid fa-pen-to-square"></i> แก้ไขบันทึกการใช้งาน/เติมน้ำมัน (ทะเบียน: ${item.Plate})`;
+            let saveBtn = document.getElementById("btn-usage-save");
+            saveBtn.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> อัปเดตแก้ไข`;
+            saveBtn.className = "btn btn-edit";
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function clearUsageForm() {
+            let lastSelectedPlate = document.getElementById("u-plate") ? document.getElementById("u-plate").value : "";
+
+            document.getElementById("u-row-index").value = "";
+            setTodayDate('u-date');
+            document.getElementById("u-mileage").value = "";
+            document.getElementById("u-price-per-litre").value = "";
+            document.getElementById("u-litres").value = "";
+            document.getElementById("u-total-amount").value = "0.00";
+            document.querySelectorAll("#table-usage-list tbody tr").forEach(r => r.classList.remove("selected-row"));
+
+            document.getElementById("form-usage-title").innerHTML = `<i class="fa-solid fa-gas-pump"></i> บันทึกการใช้งานรถยนต์และเติมน้ำมัน (Sheet 2)`;
+            let saveBtn = document.getElementById("btn-usage-save");
+            saveBtn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล`;
+            saveBtn.className = "btn btn-save";
+
+            if (lastSelectedPlate && document.getElementById("u-plate")) {
+                document.getElementById("u-plate").value = lastSelectedPlate;
+            }
+        }
+
+        async function saveUsage() {
+            let rowIndex = document.getElementById("u-row-index").value;
+            let action = rowIndex ? "update" : "add";
+
+            let payload = {
+                Date: document.getElementById("u-date").value,
+                Plate: document.getElementById("u-plate").value,
+                Mileage: document.getElementById("u-mileage").value,
+                FuelType: document.getElementById("u-fuel-type").value,
+                PricePerLitre: document.getElementById("u-price-per-litre").value,
+                Litres: document.getElementById("u-litres").value,
+                TotalAmount: document.getElementById("u-total-amount").value
+            };
+
+            showLoader(true);
+            try {
+                await fetch(API_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sheet: "Usage", action: action, rowIndex: rowIndex, payload: payload })
+                });
+                clearUsageForm();
+                setTimeout(() => { loadAllData(); }, 1000);
+            } catch(e) {
+                console.error(e);
+                showLoader(false);
+            }
+        }
+
+        async function deleteUsageDirect(rowIndex, event) {
+            if (event) event.stopPropagation();
+            if (confirm(`คุณต้องการลบรายการประวัติตามบรรทัดนี้ใช่หรือไม่?`)) {
+                showLoader(true);
+                try {
+                    await fetch(API_URL, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ sheet: "Usage", action: "delete", rowIndex: rowIndex, payload: {} })
+                    });
+                    clearUsageForm();
+                    setTimeout(() => { loadAllData(); }, 1000);
+                } catch(e) {
+                    console.error(e);
+                    showLoader(false);
+                }
+            }
+        }
+
+        /* Dynamic Repair Items Functions */
+        function addRepairItemRow(desc = "", price = "") {
+            let container = document.getElementById("repair-items-container");
+            if (!container) return;
+            let row = document.createElement("div");
+            row.className = "repair-item-row";
+            row.innerHTML = `
+                <input type="text" class="repair-desc" placeholder="ระบุรายการซ่อม เช่น ผ้าเบรคหน้า" value="${desc}" oninput="calculateMaintenanceTotal()">
+                <input type="number" step="0.01" class="repair-price" placeholder="ราคา (บาท)" value="${price}" oninput="calculateMaintenanceTotal()">
+                <button type="button" class="btn btn-remove-item" onclick="removeRepairItemRow(this)"><i class="fa-solid fa-trash"></i></button>
+            `;
+            container.appendChild(row);
+            calculateMaintenanceTotal();
+        }
+
+        function removeRepairItemRow(btn) {
+            let container = document.getElementById("repair-items-container");
+            if (container && container.children.length > 1) {
+                btn.parentElement.remove();
+                calculateMaintenanceTotal();
+            } else {
+                alert("ต้องมีอย่างน้อย 1 รายการซ่อม");
+            }
+        }
+
+        function calculateMaintenanceTotal() {
+            let priceInputs = document.querySelectorAll(".repair-price");
+            let sumPrice = 0;
+            priceInputs.forEach(input => {
+                sumPrice += parseFloat(input.value) || 0;
+            });
+
+            let vatRateEl = document.getElementById("m-vat-rate");
+            let vatRateInput = vatRateEl ? vatRateEl.value : "7";
+            let vatRate = vatRateInput !== "" ? (parseFloat(vatRateInput) || 0) : 0;
+
+            let vatAmount = (sumPrice * vatRate) / 100;
+            let total = sumPrice + vatAmount;
+
+            if (document.getElementById("m-price")) document.getElementById("m-price").value = sumPrice.toFixed(2);
+            if (document.getElementById("m-vat")) document.getElementById("m-vat").value = vatAmount.toFixed(2);
+            if (document.getElementById("m-total-amount")) document.getElementById("m-total-amount").value = total.toFixed(2);
+        }
+
+        function parseRepairItem(itemStr) {
+            let trimmed = itemStr.trim();
+            if (!trimmed) return { desc: "-", price: null };
+
+            let lastParenIndex = trimmed.lastIndexOf("(");
+            if (lastParenIndex !== -1 && trimmed.endsWith("บาท)")) {
+                let descPart = trimmed.substring(0, lastParenIndex).trim();
+                let pricePart = trimmed.substring(lastParenIndex + 1).replace("บาท)", "").trim().replace(/,/g, '');
+                let numPrice = parseFloat(pricePart);
+                if (!isNaN(numPrice) && descPart) {
+                    return { desc: descPart, price: numPrice };
+                }
+            }
+
+            return { desc: trimmed, price: null };
+        }
+
+        function loadMaintenanceTable() {
+            let tbody = document.querySelector("#table-maintenance-list tbody");
+            if (!tbody) return;
+            tbody.innerHTML = "";
+
+            let selectedPlate = document.getElementById("m-plate-filter").value;
+            let selectedMonth = document.getElementById("m-month-filter").value;
+
+            if (!selectedPlate && !selectedMonth) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 22px;">กรุณาเลือก <b>หมายเลขทะเบียนรถ</b> หรือ <b>เดือน</b> เพื่อดูประวัติการซ่อมบำรุง</td></tr>`;
+                return;
+            }
+
+            let filteredData = maintenanceData.filter(item => {
+                let matchPlate = true;
+                let matchMonth = true;
+
+                if (selectedPlate) {
+                    matchPlate = (item.Plate && item.Plate.trim() === selectedPlate.trim());
+                }
+
+                if (selectedMonth) {
+                    let isoDate = formatDateToISO(item.Date);
+                    matchMonth = isoDate.startsWith(selectedMonth);
+                }
+
+                return matchPlate && matchMonth;
+            });
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 22px;">ไม่พบรายการซ่อมบำรุงตามเงื่อนไขที่เลือก</td></tr>`;
+                return;
+            }
+
+            filteredData.forEach(item => {
+                let repairTableRows = "";
+                if (item.Details) {
+                    let items = item.Details.split(",");
+                    items.forEach(it => {
+                        let parsed = parseRepairItem(it);
+                        let pStr = parsed.price !== null ? parsed.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "-";
+                        repairTableRows += `
+                            <tr>
+                                <td>• ${parsed.desc}</td>
+                                <td style="text-align: right; width: 120px; font-weight: 500;">${pStr}</td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                let subPrice = parseFloat(item.Price) || 0;
+                let vatPrice = parseFloat(item.VAT) || 0;
+                let totalAmt = parseFloat(item.TotalAmount) || 0;
+                let mileageVal = item.Mileage ? parseInt(item.Mileage).toLocaleString() : "-";
+
+                let summaryHtml = `
+                    <table class="inner-repair-table">
+                        <tbody>
+                            ${repairTableRows}
+                        </tbody>
+                    </table>
+                    <div class="summary-box-row">
+                        <div style="display: flex; justify-content: space-between; color: #64748b; padding: 2px 0;">
+                            <span>ราคารวมสินค้า/อะไหล่:</span>
+                            <span><b>${subPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b> บาท</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; color: #64748b; padding: 2px 0;">
+                            <span>ภาษีมูลค่าเพิ่ม VAT:</span>
+                            <span><b>${vatPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b> บาท</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; color: var(--pea-purple); font-size: 14.5px; font-weight: bold; margin-top: 4px; padding-top: 6px; border-top: 1px solid #e2e8f0;">
+                            <span>รวมเงินทั้งสิ้น:</span>
+                            <span>${totalAmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} บาท</span>
+                        </div>
+                    </div>
+                `;
+
+                let tr = document.createElement("tr");
+                tr.id = `row-maint-${item.rowIndex}`;
+                tr.innerHTML = `
+                    <td>${formatDateToThai(item.Date)}</td>
+                    <td><b>${mileageVal}</b></td>
+                    <td>${item.Type}</td>
+                    <td><b>${item.Plate}</b></td>
+                    <td colspan="2">${summaryHtml}</td>
+                    <td style="text-align: center;">
+                        <div class="action-btn-group">
+                            <button class="btn btn-edit btn-tbl-action" onclick="selectMaintenanceForEdit(${item.rowIndex}, event)"><i class="fa-solid fa-pen-to-square"></i> แก้ไข</button>
+                            <button class="btn btn-delete btn-tbl-action" onclick="deleteMaintenanceDirect(${item.rowIndex}, event)"><i class="fa-solid fa-trash"></i> ลบ</button>
+                        </div>
+                    </td>
+                `;
+                tr.onclick = () => selectMaintenanceForEdit(item.rowIndex);
+                tbody.appendChild(tr);
+            });
+        }
+
+        function resetMaintenanceFilters() {
+            document.getElementById("m-plate-filter").value = "";
+            document.getElementById("m-month-filter").value = "";
+            loadMaintenanceTable();
+        }
+
+        function selectMaintenanceForEdit(rowIndex, event) {
+            if (event) event.stopPropagation();
+
+            document.querySelectorAll("#table-maintenance-list tbody tr").forEach(r => r.classList.remove("selected-row"));
+            let targetRow = document.getElementById(`row-maint-${rowIndex}`);
+            if (targetRow) targetRow.classList.add("selected-row");
+
+            let item = maintenanceData.find(m => m.rowIndex === rowIndex);
+            if (item) populateMaintenanceForm(item);
+        }
+
+        function populateMaintenanceForm(item) {
+            document.getElementById("m-row-index").value = item.rowIndex;
+            document.getElementById("m-date").value = formatDateToISO(item.Date);
+            document.getElementById("m-type").value = item.Type;
+            document.getElementById("m-plate").value = item.Plate;
+            document.getElementById("m-mileage").value = item.Mileage;
+            
+            let subP = parseFloat(item.Price) || 0;
+            let vatP = parseFloat(item.VAT) || 0;
+            if (subP > 0 && vatP > 0) {
+                let rate = (vatP * 100) / subP;
+                document.getElementById("m-vat-rate").value = Math.round(rate);
+            } else {
+                document.getElementById("m-vat-rate").value = "0";
+            }
+            document.getElementById("m-vat").value = item.VAT || "0.00";
+
+            let container = document.getElementById("repair-items-container");
+            if (container) container.innerHTML = "";
+
+            if (item.Details) {
+                let items = item.Details.split(",");
+                items.forEach(it => {
+                    let parsed = parseRepairItem(it);
+                    addRepairItemRow(parsed.desc, parsed.price !== null ? parsed.price : "");
+                });
+            } else {
+                addRepairItemRow();
+            }
+
+            calculateMaintenanceTotal();
+
+            document.getElementById("form-maint-title").innerHTML = `<i class="fa-solid fa-pen-to-square"></i> แก้ไขบันทึกการซ่อมบำรุง (ทะเบียน: ${item.Plate})`;
+            let saveBtn = document.getElementById("btn-maint-save");
+            saveBtn.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> อัปเดตแก้ไข`;
+            saveBtn.className = "btn btn-edit";
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function saveMaintenance() {
+            let rowIndex = document.getElementById("m-row-index").value;
+            let action = rowIndex ? "update" : "add";
+
+            let descRows = document.querySelectorAll(".repair-desc");
+            let priceRows = document.querySelectorAll(".repair-price");
+            let detailsArr = [];
+            for (let i = 0; i < descRows.length; i++) {
+                let d = descRows[i].value.trim();
+                let p = priceRows[i].value.trim();
+                if (d) {
+                    detailsArr.push(`${d} (${p || 0} บาท)`);
+                }
+            }
+
+            let vatVal = document.getElementById("m-vat").value;
+
+            let payload = {
+                Date: document.getElementById("m-date").value,
+                Type: document.getElementById("m-type").value,
+                Plate: document.getElementById("m-plate").value,
+                Mileage: document.getElementById("m-mileage").value,
+                Details: detailsArr.join(", "),
+                Price: document.getElementById("m-price").value,
+                VAT: vatVal !== "" ? vatVal : "0.00",
+                TotalAmount: document.getElementById("m-total-amount").value
+            };
+
+            showLoader(true);
+            try {
+                await fetch(API_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sheet: "Maintenance", action: action, rowIndex: rowIndex, payload: payload })
+                });
+                clearMaintenanceForm();
+                setTimeout(() => { loadAllData(); }, 1000);
+            } catch(e) {
+                console.error(e);
+                showLoader(false);
+            }
+        }
+
+        async function deleteMaintenanceDirect(rowIndex, event) {
+            if (event) event.stopPropagation();
+            if (confirm(`คุณต้องการลบรายการซ่อมบำรุงแถวนี้ใช่หรือไม่?`)) {
+                showLoader(true);
+                try {
+                    await fetch(API_URL, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ sheet: "Maintenance", action: "delete", rowIndex: rowIndex, payload: {} })
+                    });
+                    clearMaintenanceForm();
+                    setTimeout(() => { loadAllData(); }, 1000);
+                } catch(e) {
+                    console.error(e);
+                    showLoader(false);
+                }
+            }
+        }
+
+        function clearMaintenanceForm() {
+            let lastSelectedPlate = document.getElementById("m-plate") ? document.getElementById("m-plate").value : "";
+
+            document.getElementById("m-row-index").value = "";
+            setTodayDate('m-date');
+            document.getElementById("m-mileage").value = "";
+            document.getElementById("m-vat-rate").value = "7";
+            document.getElementById("m-vat").value = "0.00";
+            let container = document.getElementById("repair-items-container");
+            if (container) container.innerHTML = "";
+            addRepairItemRow();
+            calculateMaintenanceTotal();
+            document.querySelectorAll("#table-maintenance-list tbody tr").forEach(r => r.classList.remove("selected-row"));
+
+            document.getElementById("form-maint-title").innerHTML = `<i class="fa-solid fa-screwdriver-wrench"></i> บันทึกการซ่อมบำรุงตามวาระ (Sheet 3)`;
+            let saveBtn = document.getElementById("btn-maint-save");
+            saveBtn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล`;
+            saveBtn.className = "btn btn-save";
+
+            if (lastSelectedPlate && document.getElementById("m-plate")) {
+                document.getElementById("m-plate").value = lastSelectedPlate;
+            }
+        }
+
+        /* Export Filter & Report Functions (ปรับปรุงกรองตามประเภทซ่อมบำรุง) */
+        function filterReportData(data) {
+            let selectedType = document.getElementById("rep-type").value;
+            let selectedPlate = document.getElementById("rep-plate").value;
+            let startDate = document.getElementById("rep-start").value;
+            let endDate = document.getElementById("rep-end").value;
+
+            return data.filter(item => {
+                let matchType = true;
+                let matchPlate = true;
+                let matchDate = true;
+
+                // กรองแยกตามประเภทการซ่อมบำรุง
+                if (selectedType === "repair") {
+                    matchType = (item.Type === "ซ่อมรถยนต์");
+                } else if (selectedType === "routine") {
+                    matchType = (item.Type === "บำรุงรักษาตามวาระ");
+                }
+
+                if (selectedPlate) {
+                    matchPlate = (item.Plate && item.Plate.trim() === selectedPlate.trim());
+                }
+
+                if (startDate || endDate) {
+                    let itemIso = formatDateToISO(item.Date);
+                    if (startDate && itemIso < startDate) matchDate = false;
+                    if (endDate && itemIso > endDate) matchDate = false;
+                }
+
+                return matchType && matchPlate && matchDate;
+            });
+        }
+
+        function exportExcel() {
+            let type = document.getElementById("rep-type").value;
+            let rawData = type === "usage" ? usageData : maintenanceData;
+            let filteredData = filterReportData(rawData);
+
+            if (filteredData.length === 0) {
+                alert("ไม่พบข้อมูลตามเงื่อนไขที่เลือก");
+                return;
+            }
+
+            let ws = XLSX.utils.json_to_sheet(filteredData);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Report");
+            
+            let selectedPlate = document.getElementById("rep-plate").value;
+            let fileName = selectedPlate ? `PEA_Report_${type}_${selectedPlate}.xlsx` : `PEA_Report_${type}_All.xlsx`;
+            XLSX.writeFile(wb, fileName);
+        }
+
+        function exportPDF() {
+            let type = document.getElementById("rep-type").value;
+            let rawData = type === "usage" ? usageData : maintenanceData;
+            let filteredData = filterReportData(rawData);
+
+            if (filteredData.length === 0) {
+                alert("ไม่พบข้อมูลตามเงื่อนไขที่เลือก");
+                return;
+            }
+
+            let selectedPlate = document.getElementById("rep-plate").value;
+            let reportTitle = "รายงานการใช้งานรถยนต์และการเติมน้ำมัน";
+            if (type === "repair") reportTitle = "รายงานการซ่อมรถยนต์";
+            if (type === "routine") reportTitle = "รายงานการบำรุงรักษาตามวาระ";
+
+            let vehicleSubTitle = selectedPlate ? `หมายเลขทะเบียน: ${selectedPlate}` : "ยานพาหนะทั้งหมดในระบบ";
+
+            let tableRows = "";
+            let totalLitres = 0;
+            let totalAmountSum = 0;
+
+            if (type === "usage") {
+                filteredData.forEach((item, idx) => {
+                    let litresNum = parseFloat(item.Litres) || 0;
+                    let amountNum = parseFloat(item.TotalAmount) || 0;
+                    totalLitres += litresNum;
+                    totalAmountSum += amountNum;
+
+                    tableRows += `
+                        <tr>
+                            <td style="text-align: center;">${idx + 1}</td>
+                            <td style="text-align: center;">${formatDateToThai(item.Date)}</td>
+                            <td><b>${item.Plate}</b></td>
+                            <td style="text-align: right;">${item.Mileage}</td>
+                            <td>${item.FuelType}</td>
+                            <td style="text-align: right;">${litresNum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td style="text-align: right;"><b>${amountNum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></td>
+                        </tr>
+                    `;
+                });
+
+                tableRows += `
+                    <tr style="background-color: #f3e8fa; font-weight: bold; color: #6F2C91;">
+                        <td colspan="5" style="text-align: center;"><b>รวมทั้งสิ้น (Total)</b></td>
+                        <td style="text-align: right; color: #6F2C91;"><b>${totalLitres.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></td>
+                        <td style="text-align: right; color: #6F2C91;"><b>${totalAmountSum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></td>
+                    </tr>
+                `;
+
+            } else {
+                filteredData.forEach((item, idx) => {
+                    let amountNum = parseFloat(item.TotalAmount) || 0;
+                    totalAmountSum += amountNum;
+                    let mileageVal = item.Mileage ? parseInt(item.Mileage).toLocaleString() : "-";
+
+                    let descColHtml = "";
+                    let priceColHtml = "";
+
+                    if (item.Details) {
+                        let parts = item.Details.split(",");
+                        parts.forEach(part => {
+                            let parsed = parseRepairItem(part);
+                            let pStr = parsed.price !== null ? parsed.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "-";
+                            descColHtml += `<div style="padding: 2px 0; border-bottom: 1px dashed #eee;">• ${parsed.desc}</div>`;
+                            priceColHtml += `<div style="padding: 2px 0; border-bottom: 1px dashed #eee; text-align: right; font-weight: 500;">${pStr}</div>`;
+                        });
+                    }
+
+                    let subPrice = parseFloat(item.Price) || 0;
+                    let vatPrice = parseFloat(item.VAT) || 0;
+
+                    descColHtml += `
+                        <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid #ddd; font-size: 11.5px; color: #555;">
+                            <div>ราคารวมอะไหล่:</div>
+                            <div>VAT:</div>
+                        </div>
+                    `;
+                    priceColHtml += `
+                        <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid #ddd; font-size: 11.5px; color: #555; text-align: right;">
+                            <div><b>${subPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b> บาท</div>
+                            <div><b>${vatPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b> บาท</div>
+                        </div>
+                    `;
+
+                    tableRows += `
+                        <tr>
+                            <td style="text-align: center;">${idx + 1}</td>
+                            <td style="text-align: center;">${formatDateToThai(item.Date)}</td>
+                            <td style="text-align: right;"><b>${mileageVal}</b></td>
+                            <td><b>${item.Plate}</b></td>
+                            <td>${item.Type}</td>
+                            <td>${descColHtml}</td>
+                            <td style="text-align: right;">${priceColHtml}</td>
+                        </tr>
+                    `;
+                });
+
+                tableRows += `
+                    <tr style="background-color: #f3e8fa; font-weight: bold; color: #6F2C91;">
+                        <td colspan="6" style="text-align: right; padding-right: 15px;"><b>รวมเงินทั้งสิ้นทุกรายการ (Total Amount)</b></td>
+                        <td style="text-align: right; color: #6F2C91; font-size: 14px;"><b>${totalAmountSum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></td>
+                    </tr>
+                `;
+            }
+
+            let tableHeader = type === "usage" ? `
+                <tr>
+                    <th style="width: 5%;">ลำดับ</th>
+                    <th style="width: 15%;">วันที่</th>
+                    <th style="width: 25%;">ทะเบียนรถ</th>
+                    <th style="width: 15%;">เลขไมล์ (Km)</th>
+                    <th style="width: 15%;">ประเภทน้ำมัน</th>
+                    <th style="width: 12%;">จำนวนลิตร</th>
+                    <th style="width: 13%;">รวมเงิน (บาท)</th>
+                </tr>
+            ` : `
+                <tr>
+                    <th style="width: 5%; text-align: center;">ลำดับ</th>
+                    <th style="width: 11%; text-align: center;">วันที่</th>
+                    <th style="width: 11%; text-align: right;">เลขไมล์</th>
+                    <th style="width: 14%;">ทะเบียนรถ</th>
+                    <th style="width: 12%;">ประเภทซ่อม</th>
+                    <th style="width: 33%;">รายการซ่อมบำรุง</th>
+                    <th style="width: 14%; text-align: right;">จำนวนเงิน (บาท)</th>
+                </tr>
+            `;
+
+            let printFrame = document.getElementById('printFrame');
+            let pri = printFrame.contentWindow || printFrame.contentDocument;
+            let doc = printFrame.contentDocument || printFrame.contentWindow.document;
+
+            doc.open();
+            doc.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${reportTitle}</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+                    <style>
+                        body {
+                            font-family: 'Sarabun', sans-serif;
+                            padding: 20px;
+                            color: #333;
+                        }
+                        .header {
+                            text-align: center;
+                            margin-bottom: 20px;
+                        }
+                        .header h2 {
+                            margin: 0;
+                            color: #6F2C91;
+                            font-size: 22px;
+                        }
+                        .header h4 {
+                            margin: 5px 0 0 0;
+                            font-weight: 500;
+                            color: #555;
+                            font-size: 16px;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 15px;
+                        }
+                        table, th, td {
+                            border: 1px solid #6F2C91;
+                        }
+                        th {
+                            background-color: #6F2C91;
+                            color: white;
+                            padding: 10px 8px;
+                            font-size: 14px;
+                        }
+                        td {
+                            padding: 10px 8px;
+                            font-size: 13px;
+                            vertical-align: top;
+                        }
+                        @media print {
+                            @page { size: A4 portrait; margin: 15mm; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h2>การไฟฟ้าส่วนภูมิภาค สาขาอำเภอโนนแดง</h2>
+                        <h4>${reportTitle} (${vehicleSubTitle})</h4>
+                    </div>
+                    <table>
+                        <thead>
+                            ${tableHeader}
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `);
+            doc.close();
+
+            setTimeout(function() {
+                pri.focus();
+                pri.print();
+            }, 500);
+        }
+    </script>
+</body>
+</html>
